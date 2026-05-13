@@ -12,8 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.jeva.login.view.LoginScreen
-import com.example.jeva.login.viewmodel.LoginViewModel
+import com.example.jeva.ui.login.LoginScreen
+import com.example.jeva.ui.login.LoginViewModel
 import com.example.jeva.ui.theme.JevaTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +37,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     if (vm.isLogged) {
         Text(text = "Bienvenido", modifier = modifier)
     } else {
-        LoginScreen(viewModel = vm, modifier = modifier)
+        LoginScreen(viewModel = vm )
     }
 }
 

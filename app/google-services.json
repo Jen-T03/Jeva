@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "623522484527",
+    "project_id": "jeva-47b60",
+    "storage_bucket": "jeva-47b60.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:623522484527:android:8ad862ddadb04c92d0d1da",
+        "android_client_info": {
+          "package_name": "com.example.jeva"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCICXSX4HNxc8oXjPv3-sCcgcTfcVaAmHY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
