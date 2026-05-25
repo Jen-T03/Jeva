@@ -1,4 +1,4 @@
-package com.example.jeva.ui.theme
+package com.example.jeva.presentation.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

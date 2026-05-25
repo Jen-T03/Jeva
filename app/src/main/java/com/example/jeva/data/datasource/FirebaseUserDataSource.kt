@@ -1,0 +1,55 @@
+package com.example.jeva.data.datasource
+
+import com.example.jeva.domain.model.TransactionModel
+import com.example.jeva.domain.model.User
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.tasks.await
+
+class FirebaseUserDataSource {
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+
+    // Login real con validación en Firebase Auth y consulta a la Base de Datos
+    suspend fun authenticateWithFirebase(email: String, javaPass: String): User {
+        val authResult = auth.signInWithEmailAndPassword(email, javaPass).await()
+        val uid = authResult.user?.uid ?: throw Exception("Usuario no encontrado")
+
+        val snapshot = database.reference.child("users").child(uid).get().await()
+        return snapshot.getValue(User::class.java) ?: throw Exception("Error al mapear datos del usuario")
+    }
+
+    // Registro real e inicialización de la estructura en Realtime Database
+    suspend fun registerInFirebase(name: String, email: String, javaPass: String): User {
+        val authResult = auth.createUserWithEmailAndPassword(email, javaPass).await()
+        val uid = authResult.user?.uid ?: throw Exception("No se pudo crear el usuario")
+
+        val newUser = User(
+            id = uid,
+            name = name,
+            email = email,
+            balance = 1500000.0,
+            transactions = emptyMap()
+        )
+
+        database.reference.child("users").child(uid).setValue(newUser).await()
+        return newUser
+    }
+
+    // Agrega una nueva transacción y actualiza el saldo de forma persistente
+    suspend fun addTransaction(uid: String, currentBalance: Double, transaction: TransactionModel) {
+        val userRef = database.reference.child("users").child(uid)
+
+        // Actualizar saldo
+        userRef.child("balance").setValue(currentBalance).await()
+
+        // Crear nuevo nodo con ID único automático (.push()) para la transacción
+        val newTxRef = userRef.child("transactions").push()
+        val finalTx = transaction.copy(id = newTxRef.key ?: "")
+        newTxRef.setValue(finalTx).await()
+    }
+    // Destruye la sesión activa en el dispositivo
+    fun logout() {
+        auth.signOut()
+    }
+}

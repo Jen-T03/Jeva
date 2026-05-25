@@ -1,4 +1,4 @@
-package com.example.jeva.ui.theme
+package com.example.jeva.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
