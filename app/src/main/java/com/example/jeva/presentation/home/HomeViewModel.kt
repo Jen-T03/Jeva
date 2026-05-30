@@ -24,6 +24,7 @@ class HomeViewModel : ViewModel() {
     var balance by mutableStateOf(0.0)
     var transactionList by mutableStateOf<List<TransactionModel>>(emptyList())
     var sendAmount by mutableStateOf("")
+    var recipientEmail by mutableStateOf("")
     var message by mutableStateOf("")
 
     init {
@@ -43,7 +44,6 @@ class HomeViewModel : ViewModel() {
                     for (child in txSnapshot.children) {
                         child.getValue(TransactionModel::class.java)?.let { txs.add(it) }
                     }
-                    // Muestra las transacciones más recientes primero
                     transactionList = txs.reversed()
                 }
 
@@ -57,6 +57,12 @@ class HomeViewModel : ViewModel() {
         val transfer = sendAmount.toDoubleOrNull()
         val uid = auth.currentUser?.uid ?: return
 
+        if (recipientEmail.isBlank()) {
+            message = "Ingresa el correo del destinatario."
+            return
+        }
+        val fullEmail = "${recipientEmail.trim()}@gmail.com"
+
         if (transfer == null || transfer <= 0 || transfer > balance) {
             message = "Monto inválido o saldo insuficiente."
             return
@@ -68,7 +74,7 @@ class HomeViewModel : ViewModel() {
             val currentDate = dateFormat.format(Date())
 
             val newTx = TransactionModel(
-                description = "Envío de dinero",
+                description = "Envío a $fullEmail",
                 amount = -transfer,
                 date = currentDate,
                 isExpense = true
@@ -76,8 +82,9 @@ class HomeViewModel : ViewModel() {
 
             try {
                 dataSource.addTransaction(uid, newBalance, newTx)
-                message = "¡Transacción exitosa!"
+                message = "¡Transacción exitosa a $fullEmail!"
                 sendAmount = ""
+                recipientEmail = ""
             } catch (e: Exception) {
                 message = "Error al transferir: ${e.message}"
             }

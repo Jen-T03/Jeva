@@ -7,20 +7,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.jeva.domain.usecase.RegisterUseCase
-import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun RegisterView(
-    registerUseCase: RegisterUseCase,
+    viewModel: RegisterViewModel,
     onRegisterSuccess: () -> Unit,
     onBackToLogin: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
+    LaunchedEffect(viewModel.registerSuccess) {
+        if (viewModel.registerSuccess) onRegisterSuccess()
+    }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
@@ -30,31 +27,57 @@ fun RegisterView(
         Text("Jeva - Registro", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = viewModel.name,
+            onValueChange = { viewModel.onNameChange(it) },
+            label = { Text("Nombre") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
         Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Correo") }, modifier = Modifier.fillMaxWidth())
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Contraseña") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
 
-        if (errorMessage.isNotEmpty()) {
-            Text(errorMessage, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(vertical = 8.dp))
+        OutlinedTextField(
+            value = viewModel.email,
+            onValueChange = { viewModel.onEmailChange(it) },
+            label = { Text("Correo") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = viewModel.password,
+            onValueChange = { viewModel.onPasswordChange(it) },
+            label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        if (viewModel.errorMessage.isNotEmpty()) {
+            Text(
+                viewModel.errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
         Button(
-            onClick = {
-                scope.launch {
-                    val result = registerUseCase(name, email, password)
-                    if (result.isSuccess) {
-                        onRegisterSuccess()
-                    } else {
-                        errorMessage = result.exceptionOrNull()?.message ?: "Error al registrar"
-                    }
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
+            onClick = { viewModel.register() },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !viewModel.isLoading
         ) {
-            Text("Registrar")
+            if (viewModel.isLoading) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("Registrar")
+            }
         }
 
         TextButton(onClick = onBackToLogin) {
