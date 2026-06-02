@@ -45,7 +45,7 @@ fun SetupNavGraph(navController: NavHostController) {
 
         composable(Screen.Register.route) {
             RegisterView(
-                viewModel = registerViewModel,
+                registerUseCase = registerUseCase, // Le pasamos el caso de uso que declaraste arriba
                 onRegisterSuccess = { navController.popBackStack() },
                 onBackToLogin = { navController.popBackStack() }
             )
