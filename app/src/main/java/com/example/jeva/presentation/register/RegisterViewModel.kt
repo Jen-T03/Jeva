@@ -8,9 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.jeva.domain.usecase.RegisterUseCase
 import kotlinx.coroutines.launch
 
-class RegisterViewModel(
-    val registerUseCase: RegisterUseCase
-) : ViewModel() {
+class RegisterViewModel(private val registerUseCase: RegisterUseCase) : ViewModel() {
 
     var name by mutableStateOf("")
     var email by mutableStateOf("")
@@ -18,6 +16,8 @@ class RegisterViewModel(
     var errorMessage by mutableStateOf("")
     var isLoading by mutableStateOf(false)
     var registerSuccess by mutableStateOf(false)
+    var frontPath by mutableStateOf("")
+    var backPath by mutableStateOf("")
 
     fun onNameChange(value: String) { name = value }
     fun onEmailChange(value: String) { email = value.trim() }
@@ -41,8 +41,7 @@ class RegisterViewModel(
 
         viewModelScope.launch {
             isLoading = true
-            // frontPath y backPath vacíos por ahora hasta que se implemente la cámara
-            val result = registerUseCase(name, email.trim(), password, "", "")
+            val result = registerUseCase(name, email.trim(), password, frontPath, backPath)
             isLoading = false
             if (result.isSuccess) {
                 registerSuccess = true
