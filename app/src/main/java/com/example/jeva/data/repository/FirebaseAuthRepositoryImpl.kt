@@ -17,9 +17,9 @@ class FirebaseAuthRepositoryImpl(
         }
     }
 
-    override suspend fun register(name: String, email: String, javaPass: String): Result<User> {
+    override suspend fun register(name: String, email: String, javaPass: String, frontPath: String, backPath: String): Result<User> {
         return try {
-            val user = dataSource.registerInFirebase(name, email, javaPass)
+            val user = dataSource.registerInFirebase(name, email, javaPass, frontPath, backPath)
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)

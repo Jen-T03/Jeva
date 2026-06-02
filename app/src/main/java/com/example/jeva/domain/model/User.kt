@@ -8,10 +8,12 @@ data class User(
     val name: String = "",
     val email: String = "",
     var balance: Double = 1500000.0,
+    val documentFrontUrl: String = "",
+    val documentBackUrl: String = "",
     val transactions: Map<String, TransactionModel> = emptyMap()
 ) {
-    // Constructor vacío requerido por Firebase
-    constructor() : this("", "", "", 1500000.0, emptyMap())
+    // Constructor vacío requerido por Firebase. ¡DEBE TENER LOS 7 PARÁMETROS EXACTOS!
+    constructor() : this("", "", "", 1500000.0, "", "", emptyMap())
 }
 
 @IgnoreExtraProperties

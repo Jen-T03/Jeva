@@ -19,8 +19,8 @@ class FirebaseUserDataSource {
         return snapshot.getValue(User::class.java) ?: throw Exception("Error al mapear datos del usuario")
     }
 
-    // Registro real e inicialización de la estructura en Realtime Database
-    suspend fun registerInFirebase(name: String, email: String, javaPass: String): User {
+    // Registro real con verificación KYC (Se agrega el parámetro documentPath)
+    suspend fun registerInFirebase(name: String, email: String, javaPass: String, frontPath: String, backPath: String): User {
         val authResult = auth.createUserWithEmailAndPassword(email, javaPass).await()
         val uid = authResult.user?.uid ?: throw Exception("No se pudo crear el usuario")
 
@@ -29,6 +29,8 @@ class FirebaseUserDataSource {
             name = name,
             email = email,
             balance = 1500000.0,
+            documentFrontUrl = frontPath,
+            documentBackUrl = backPath,
             transactions = emptyMap()
         )
 
@@ -48,6 +50,7 @@ class FirebaseUserDataSource {
         val finalTx = transaction.copy(id = newTxRef.key ?: "")
         newTxRef.setValue(finalTx).await()
     }
+
     // Destruye la sesión activa en el dispositivo
     fun logout() {
         auth.signOut()
