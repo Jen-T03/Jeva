@@ -30,47 +30,98 @@ fun HomeView(onLogout: () -> Unit, viewModel: HomeViewModel = viewModel()) {
         }
     ) { paddingValues ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Text("Saldo total disponible", style = MaterialTheme.typography.titleMedium)
-                    Text("$${String.format("%,.2f", viewModel.balance)}", style = MaterialTheme.typography.headlineLarge)
+                    Text(
+                        "$${String.format("%,.2f", viewModel.balance)}",
+                        style = MaterialTheme.typography.headlineLarge
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo correo destinatario
+            OutlinedTextField(
+                value = viewModel.recipientEmail,
+                onValueChange = { viewModel.recipientEmail = it },
+                label = { Text("Correo destinatario") },
+                suffix = { Text("@gmail.com") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Campo monto
             OutlinedTextField(
                 value = viewModel.sendAmount,
                 onValueChange = { viewModel.sendAmount = it },
                 label = { Text("Monto a transferir") },
                 modifier = Modifier.fillMaxWidth()
             )
+
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(onClick = { viewModel.executeTransaction() }, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = { viewModel.executeTransaction() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Ejecutar Transacción")
             }
 
             if (viewModel.message.isNotEmpty()) {
-                Text(viewModel.message, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(8.dp))
+                Text(
+                    viewModel.message,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(8.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Historial de Movimientos", style = MaterialTheme.typography.titleMedium, modifier = Modifier.align(Alignment.Start))
 
-            // LAZYCOLUMN VINCULADA A REALTIME DATABASE
-            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            Text(
+                "Historial de Movimientos",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.Black,
+                modifier = Modifier.align(Alignment.Start)
+            )
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
                 items(viewModel.transactionList) { tx ->
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
                         Row(
-                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column {
-                                Text(tx.description, style = MaterialTheme.typography.bodyLarge)
-                                Text(tx.date, style = MaterialTheme.typography.bodySmall)
+                                Text(
+                                    tx.description,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    tx.date,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Black
+                                )
                             }
                             Text(
                                 text = "$${String.format("%,.0f", tx.amount)}",

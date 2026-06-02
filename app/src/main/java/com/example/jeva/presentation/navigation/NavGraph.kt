@@ -1,6 +1,7 @@
 package com.example.jeva.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,6 +12,7 @@ import com.example.jeva.domain.usecase.RegisterUseCase
 import com.example.jeva.presentation.home.HomeView
 import com.example.jeva.presentation.login.LoginView
 import com.example.jeva.presentation.register.RegisterView
+import com.example.jeva.presentation.register.RegisterViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -20,13 +22,14 @@ fun SetupNavGraph(navController: NavHostController) {
     val loginUseCase = LoginUseCase(repository)
     val registerUseCase = RegisterUseCase(repository)
 
-    // Validación de sesión persistente
+    val registerViewModel = remember { RegisterViewModel(registerUseCase) }
+
     val currentUser = FirebaseAuth.getInstance().currentUser
     val startRoute = if (currentUser != null) Screen.Home.route else Screen.Login.route
 
     NavHost(
         navController = navController,
-        startDestination = startRoute // Usamos la ruta dinámica aquí
+        startDestination = startRoute
     ) {
         composable(Screen.Login.route) {
             LoginView(
@@ -42,7 +45,7 @@ fun SetupNavGraph(navController: NavHostController) {
 
         composable(Screen.Register.route) {
             RegisterView(
-                registerUseCase = registerUseCase,
+                viewModel = registerViewModel,
                 onRegisterSuccess = { navController.popBackStack() },
                 onBackToLogin = { navController.popBackStack() }
             )
