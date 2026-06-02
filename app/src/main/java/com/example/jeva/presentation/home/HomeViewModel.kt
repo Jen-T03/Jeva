@@ -36,12 +36,10 @@ class HomeViewModel : ViewModel() {
         database.reference.child("users").child(uid)
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val balanceValue = snapshot.child("balance").getValue(Double::class.java) ?: 0.0
-                    balance = balanceValue
+                    balance = snapshot.child("balance").getValue(Double::class.java) ?: 0.0
 
                     val txs = mutableListOf<TransactionModel>()
-                    val txSnapshot = snapshot.child("transactions")
-                    for (child in txSnapshot.children) {
+                    for (child in snapshot.child("transactions").children) {
                         child.getValue(TransactionModel::class.java)?.let { txs.add(it) }
                     }
                     transactionList = txs.reversed()
@@ -61,32 +59,40 @@ class HomeViewModel : ViewModel() {
             message = "Ingresa el correo del destinatario."
             return
         }
-        val fullEmail = "${recipientEmail.trim()}@gmail.com"
-
-        if (transfer == null || transfer <= 0 || transfer > balance) {
-            message = "Monto inválido o saldo insuficiente."
+        if (transfer == null || transfer <= 0) {
+            message = "Ingresa un monto válido."
+            return
+        }
+        if (transfer > balance) {
+            message = "Saldo insuficiente."
             return
         }
 
+        val fullEmail = "${recipientEmail.trim()}@gmail.com"
+        val currentUserEmail = auth.currentUser?.email ?: ""
+
+        if (fullEmail == currentUserEmail) {
+            message = "No puedes transferirte a ti mismo."
+            return
+        }
+
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val currentDate = dateFormat.format(Date())
+
         viewModelScope.launch {
-            val newBalance = balance - transfer
-            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val currentDate = dateFormat.format(Date())
-
-            val newTx = TransactionModel(
-                description = "Envío a $fullEmail",
-                amount = -transfer,
-                date = currentDate,
-                isExpense = true
-            )
-
             try {
-                dataSource.addTransaction(uid, newBalance, newTx)
-                message = "¡Transacción exitosa a $fullEmail!"
+                dataSource.transferToEmail(
+                    senderUid = uid,
+                    senderBalance = balance,
+                    recipientEmail = fullEmail,
+                    amount = transfer,
+                    date = currentDate
+                )
+                message = "¡Transferencia exitosa a $fullEmail!"
                 sendAmount = ""
                 recipientEmail = ""
             } catch (e: Exception) {
-                message = "Error al transferir: ${e.message}"
+                message = e.message ?: "Error al transferir."
             }
         }
     }

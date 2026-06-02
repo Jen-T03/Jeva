@@ -41,7 +41,8 @@ class RegisterViewModel(
 
         viewModelScope.launch {
             isLoading = true
-            val result = registerUseCase(name, email.trim(), password)
+            // frontPath y backPath vacíos por ahora hasta que se implemente la cámara
+            val result = registerUseCase(name, email.trim(), password, "", "")
             isLoading = false
             if (result.isSuccess) {
                 registerSuccess = true

@@ -10,7 +10,6 @@ class FirebaseUserDataSource {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
 
-    // Login real con validación en Firebase Auth y consulta a la Base de Datos
     suspend fun authenticateWithFirebase(email: String, javaPass: String): User {
         val authResult = auth.signInWithEmailAndPassword(email, javaPass).await()
         val uid = authResult.user?.uid ?: throw Exception("Usuario no encontrado")
@@ -19,7 +18,6 @@ class FirebaseUserDataSource {
         return snapshot.getValue(User::class.java) ?: throw Exception("Error al mapear datos del usuario")
     }
 
-    // Registro real con verificación KYC (Se agrega el parámetro documentPath)
     suspend fun registerInFirebase(name: String, email: String, javaPass: String, frontPath: String, backPath: String): User {
         val authResult = auth.createUserWithEmailAndPassword(email, javaPass).await()
         val uid = authResult.user?.uid ?: throw Exception("No se pudo crear el usuario")
@@ -38,20 +36,73 @@ class FirebaseUserDataSource {
         return newUser
     }
 
-    // Agrega una nueva transacción y actualiza el saldo de forma persistente
     suspend fun addTransaction(uid: String, currentBalance: Double, transaction: TransactionModel) {
         val userRef = database.reference.child("users").child(uid)
-
-        // Actualizar saldo
         userRef.child("balance").setValue(currentBalance).await()
-
-        // Crear nuevo nodo con ID único automático (.push()) para la transacción
         val newTxRef = userRef.child("transactions").push()
         val finalTx = transaction.copy(id = newTxRef.key ?: "")
         newTxRef.setValue(finalTx).await()
     }
 
-    // Destruye la sesión activa en el dispositivo
+
+    suspend fun transferToEmail(
+        senderUid: String,
+        senderBalance: Double,
+        recipientEmail: String,
+        amount: Double,
+        date: String
+    ) {
+
+        val snapshot = database.reference.child("users")
+            .orderByChild("email")
+            .equalTo(recipientEmail)
+            .get()
+            .await()
+
+        if (!snapshot.exists()) {
+            throw Exception("No existe un usuario con ese correo.")
+        }
+
+
+        val recipientSnapshot = snapshot.children.first()
+        val recipientUid = recipientSnapshot.key ?: throw Exception("Error al obtener destinatario.")
+        val recipientBalance = recipientSnapshot.child("balance").getValue(Double::class.java)
+            ?: throw Exception("Error al obtener saldo del destinatario.")
+
+
+        val senderRef = database.reference.child("users").child(senderUid)
+        senderRef.child("balance").setValue(senderBalance - amount).await()
+
+
+        val senderTxRef = senderRef.child("transactions").push()
+        senderTxRef.setValue(
+            TransactionModel(
+                id = senderTxRef.key ?: "",
+                description = "Envío a $recipientEmail",
+                amount = -amount,
+                date = date,
+                isExpense = true
+            )
+        ).await()
+
+
+        val recipientRef = database.reference.child("users").child(recipientUid)
+        recipientRef.child("balance").setValue(recipientBalance + amount).await()
+
+
+        val recipientTxRef = recipientRef.child("transactions").push()
+        val senderEmail = auth.currentUser?.email ?: "desconocido"
+        recipientTxRef.setValue(
+            TransactionModel(
+                id = recipientTxRef.key ?: "",
+                description = "Recibido de $senderEmail",
+                amount = amount,
+                date = date,
+                isExpense = false
+            )
+        ).await()
+    }
+
     fun logout() {
         auth.signOut()
     }
